@@ -24,6 +24,8 @@ public class ReviewEventListener {
         long reviewCount = product.getReviewCount() + 1;
         // 리뷰 평점 다시 계산
         float newScore = (product.getScore() * product.getReviewCount() + event.getScore()) / reviewCount;
+        // 소수 첫 번째 자리까지
+        newScore = Math.round(newScore * 100) / 100.0f;
 
         product.setReviewCount(reviewCount);
         product.setScore(newScore);
