@@ -12,7 +12,7 @@ import java.util.List;
 public interface ReviewRepository extends JpaRepository<Review, Long> {
     @Query("SELECT r FROM Review r " +
             "JOIN Product p ON p.id = r.product.id " +
-            "WHERE r.product = :product AND p.id < :cursor " +
+            "WHERE r.product = :product AND r.id < :cursor " +
             "ORDER BY r.id DESC " +
             "LIMIT :size ")
     List<Review> findAllByProduct(Product product, Long cursor, Integer size);

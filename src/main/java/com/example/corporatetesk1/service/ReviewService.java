@@ -5,11 +5,13 @@ import com.example.corporatetesk1.dto.ReviewResponseDto;
 import com.example.corporatetesk1.entity.Product;
 import com.example.corporatetesk1.entity.Review;
 import com.example.corporatetesk1.entity.ReviewInfo;
+import com.example.corporatetesk1.event.ReviewPostedEvent;
 import com.example.corporatetesk1.exception.ErrorCode;
 import com.example.corporatetesk1.exception.ReviewApplicationException;
 import com.example.corporatetesk1.repository.ProductRepository;
 import com.example.corporatetesk1.repository.ReviewRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -23,6 +25,7 @@ public class ReviewService {
 
     private final ProductRepository productRepository;
     private final ReviewRepository reviewRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     public ReviewInfo getReviews(Long productId, Long cursor, Integer size) {
         // 먼저 해당 포스트가 있는지 확인
@@ -47,11 +50,8 @@ public class ReviewService {
         // 이미지의 유뮤에 따라 리뷰 저장
         if (file != null) reviewRepository.save(new Review(product, reviewRequestDto, file.getOriginalFilename()));
         else reviewRepository.save(new Review(product, reviewRequestDto));
-        // 후기가 저장된 이후 후기의 개수 증가
-        Long reviewCount = product.getReviewCount() + 1;
-        // 후기가 저장된 이후 후기의 평점 계산
-        product.setScore((product.getScore() * product.getReviewCount() + reviewRequestDto.getScore()) / reviewCount);
-        product.setReviewCount(reviewCount);
+        // 리뷰가 저장되면 이벤트 발행
+        eventPublisher.publishEvent(new ReviewPostedEvent(productId, reviewRequestDto.getScore()));
     }
 
     // 상품이 있는지 확인
